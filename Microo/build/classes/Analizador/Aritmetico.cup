@@ -1,0 +1,113 @@
+package Analizador;
+import java.io.*;
+import java.util.*;
+import java_cup.runtime.*;
+import java.util.HashMap;
+
+
+action code {:
+	
+	public static HashMap<String, Object> hm = new HashMap<>();
+	
+	
+	public static void Put(String identifier, Object value) {
+		hm.put(identifier, value);
+	}
+			   			   
+	public static Object Get(String identifier) {
+		return hm.get(identifier);
+	}
+   
+	public static void Show(String value) {
+		System.out.println("Resultado: " +  value);
+		System.out.println("Fin de ejecucion.");
+	}
+	
+:};
+
+/* Terminales sin atributo */
+terminal INICIO, FIN;
+terminal PUNTOYCOMA, MAS, MENOS, POR, DIVISION,ASIGNACION, IDENTIFIER, IMPRIMIR;
+terminal LPAREN, RPAREN;
+
+
+/* Terminales con atributo asociado */
+terminal Integer NUMERO;
+
+/* No terminales sin atributo */
+non terminal program, lista_expresiones, declaracion,asignacion,imprimir;
+
+/* No terminales con atributo asociado */
+non terminal Integer expresion;
+
+/* Precedencias */
+precedence left MAS, MENOS;
+precedence left POR, DIVISION;
+
+start with program;
+
+/* Reglas de Gramatica */
+
+
+program ::= INICIO lista_expresiones FIN;
+
+lista_expresiones ::= lista_expresiones declaracion PUNTOYCOMA
+			| lista_expresiones error PUNTOYCOMA
+			|
+			;
+			
+declaracion::= asignacion:a
+               |imprimir
+               |expresion:e
+               |
+;
+
+asignacion ::= IDENTIFIER:v ASIGNACION expresion:e
+                {: Put((String)v, e); :}
+               
+;
+
+imprimir ::= IMPRIMIR LPAREN IDENTIFIER:v RPAREN {: System.out.println("Resultado : "+v + " = " + Get((String)v)); :}
+;
+		
+expresion ::= expresion:e1 MAS expresion:e2
+		{: RESULT = new Integer(e1.intValue() + e2.intValue()); :}
+		| expresion:e1 MENOS expresion:e2
+		{: RESULT = new Integer(e1.intValue() - e2.intValue()); :}
+		| expresion:e1 POR expresion:e2
+		{: RESULT = new Integer(e1.intValue() * e2.intValue()); :}
+		| expresion:e1 DIVISION expresion:e2
+		{: RESULT = new Integer(e1.intValue() / e2.intValue()); :}
+		| NUMERO:n
+		{: RESULT = n; :}
+                /*| IDENTIFIER:v
+                {: RESULT = (Integer)Get((String)v); : }*/
+                |IDENTIFIER:e1 MAS IDENTIFIER:e2
+                {: RESULT = new Integer((Integer)Get((String)e1) + (Integer)Get((String)e2));:}
+		|IDENTIFIER:e1 MENOS IDENTIFIER:e2
+                {: RESULT = new Integer((Integer)Get((String)e1) - (Integer)Get((String)e2));:}
+                |IDENTIFIER:e1 MAS expresion:e2
+                {: RESULT = new Integer((Integer)Get((String)e1) + e2.intValue());:}    
+                |IDENTIFIER:e1 MENOS expresion:e2
+                {: RESULT = new Integer((Integer)Get((String)e1) - e2.intValue());:}    
+                |IDENTIFIER:e1 POR IDENTIFIER:e2
+                {: RESULT = new Integer((Integer)Get((String)e1) * (Integer)Get((String)e2));:}
+                |IDENTIFIER:e1 DIVISION IDENTIFIER:e2
+                {: RESULT = new Integer((Integer)Get((String)e1) / (Integer)Get((String)e2));:}    
+                 |IDENTIFIER:e1 POR expresion:e2
+                {: RESULT = new Integer((Integer)Get((String)e1) * e2.intValue());:} 
+                |IDENTIFIER:e1 DIVISION expresion:e2
+                {: RESULT = new Integer((Integer)Get((String)e1) / e2.intValue());:} 
+                |expresion:e2 MAS IDENTIFIER:e1
+                {: RESULT = new Integer( e2.intValue()+(Integer)Get((String)e1))  ;:}
+                |expresion:e2 MENOS IDENTIFIER:e1
+                {: RESULT = new Integer( e2.intValue()-(Integer)Get((String)e1))  ;:}
+                |expresion:e2 POR IDENTIFIER:e1
+                {: RESULT = new Integer( e2.intValue()*(Integer)Get((String)e1))  ;:}
+                |expresion:e2 DIVISION IDENTIFIER:e1
+                {: RESULT = new Integer( e2.intValue()/(Integer)Get((String)e1))  ;:}
+                
+
+                | LPAREN expresion:e RPAREN
+		{: RESULT = e; :}
+		;

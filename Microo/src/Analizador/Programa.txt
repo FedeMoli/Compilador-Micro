@@ -1,0 +1,6 @@
+inicio
+x=2;
+z=4;
+c=z+x+2;
+escribir(c);
+fin
